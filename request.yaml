@@ -1,0 +1,7 @@
+host: http://www.baidu.com
+port: !!str 80
+path: /api/path
+method: post
+concurrency: 20
+total: 1000
+message: 'post body'
