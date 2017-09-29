@@ -64,16 +64,26 @@ func main() {
 func handleRequestWorker(channelIndex int) {
 	client := http.Client{}
 	for i := 0; ; i++ {
-		// fmt.Println("request num:" + strconv.Itoa(i) + " for channel:" + strconv.Itoa(channelIndex))
 		request := <-requestChannel
 
-		httpRequest, err := http.NewRequest("POST", request.Url, bytes.NewBuffer([]byte(request.Data)))
-		httpRequest.Header.Add("Content-Type", "application/json")
+		var httpRequest *http.Request
+		var err error
+
+		if request.Method == "post" {
+			httpRequest, err = http.NewRequest("POST", request.Url, bytes.NewBuffer([]byte(request.Data)))
+			httpRequest.Header.Add("Content-Type", "application/json")
+		} else {
+			url := request.Url + "?" + request.Data
+			httpRequest, err = http.NewRequest("GET", url, nil)
+		}
+
 		if err != nil {
 			panic(err)
 		}
 
+		fmt.Println("start sending request num:" + strconv.Itoa(i) + " for channel:" + strconv.Itoa(channelIndex))
 		response, err := client.Do(httpRequest)
+		fmt.Println("get response for request num:" + strconv.Itoa(i) + " for channel:" + strconv.Itoa(channelIndex))
 		if err != nil {
 			panic(err)
 		}
@@ -91,7 +101,7 @@ func getRequestFormModel(model RequestModel) Request {
 
 	request.Url = model.Host + ":" + model.Port + model.Path
 	request.Data = model.Message
-	request.Method = "post"
+	request.Method = model.Method
 
 	return request
 }
